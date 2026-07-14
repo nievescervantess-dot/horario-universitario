@@ -123,7 +123,8 @@ def apply_custom_theme(theme_name):
         [data-testid="stSidebar"] {{
             background-color: {t['sidebar_bg']} !important;
         }}
-        [data-testid="stSidebar"] * {{
+        [data-testid="stSidebar"] h1, [data-testid="stSidebar"] h2, [data-testid="stSidebar"] h3, 
+        [data-testid="stSidebar"] label, [data-testid="stSidebar"] p {{
             color: {t['text']} !important;
         }}
         /* Entradas de texto, números y selectores */
@@ -131,6 +132,10 @@ def apply_custom_theme(theme_name):
             background-color: {t['input_bg']} !important;
             color: {t['input_text']} !important;
             border-color: {t['input_border']} !important;
+        }}
+        input::placeholder, textarea::placeholder {{
+            color: {t['input_text']} !important;
+            opacity: 0.65 !important;
         }}
         /* Menús desplegables y opciones */
         ul[data-baseweb="menu"], div[data-baseweb="popover"], div[role="listbox"] {{
@@ -143,6 +148,52 @@ def apply_custom_theme(theme_name):
         }}
         li[data-baseweb="option"]:hover, div[role="option"]:hover {{
             background-color: {t['sidebar_bg']} !important;
+        }}
+        /* Botones secundarios (como Restablecer o Cerrar Sesión) */
+        div[data-testid="stButton"] button {{
+            background-color: {t['input_bg']} !important;
+            color: {t['input_text']} !important;
+            border: 1px solid {t['input_border']} !important;
+            font-weight: 600 !important;
+        }}
+        div[data-testid="stButton"] button p, div[data-testid="stButton"] button span {{
+            color: {t['input_text']} !important;
+        }}
+        /* Botones primarios (Guardar, Iniciar Sesión, etc.) */
+        div[data-testid="stButton"] button[kind="primary"], button[data-testid="baseButton-primary"] {{
+            background-color: {t['primary']} !important;
+            color: #FFFFFF !important;
+            border: none !important;
+        }}
+        div[data-testid="stButton"] button[kind="primary"] p, button[data-testid="baseButton-primary"] p {{
+            color: #FFFFFF !important;
+        }}
+        /* Archivos subidos (File Uploader preview y zona de arrastre) */
+        [data-testid="stFileUploader"] section {{
+            background-color: {t['input_bg']} !important;
+            border: 1px dashed {t['input_border']} !important;
+        }}
+        [data-testid="stFileUploader"] section * {{
+            color: {t['input_text']} !important;
+        }}
+        [data-testid="stFileUploader"] [data-testid="stFileUploaderFile"] {{
+            background-color: {t['sidebar_bg']} !important;
+            border: 1px solid {t['input_border']} !important;
+        }}
+        [data-testid="stFileUploader"] [data-testid="stFileUploaderFile"] * {{
+            color: {t['text']} !important;
+        }}
+        /* Expanders (Acordeones) */
+        details[data-testid="stExpander"] {{
+            background-color: {t['sidebar_bg']} !important;
+            border: 1px solid {t['input_border']} !important;
+            border-radius: 8px !important;
+        }}
+        details[data-testid="stExpander"] summary {{
+            background-color: {t['sidebar_bg']} !important;
+        }}
+        details[data-testid="stExpander"] summary * {{
+            color: {t['text']} !important;
         }}
         /* Párrafos, Títulos y Etiquetas */
         .stMarkdown, h1, h2, h3, h4, h5, h6, label, p, span {{
@@ -168,15 +219,6 @@ def apply_custom_theme(theme_name):
             background-color: {t['bg']} !important;
             color: {t['primary']} !important;
             border-bottom: 3px solid {t['primary']} !important;
-        }}
-        /* Expanders */
-        details[data-testid="stExpander"] {{
-            background-color: {t['sidebar_bg']} !important;
-            border: 1px solid {t['input_border']} !important;
-            border-radius: 8px !important;
-        }}
-        details[data-testid="stExpander"] summary span {{
-            color: {t['text']} !important;
         }}
         /* Contenedores st.metric */
         [data-testid="stMetricValue"], [data-testid="stMetricLabel"] {{
