@@ -558,3 +558,39 @@ def generate_pdf_schedule(username, schedule):
     pdf_val = buffer.getvalue()
     buffer.close()
     return pdf_val
+
+# --- Gestión de Banners Personalizados ---
+
+def get_user_banner_path(username):
+    """Genera la ruta del archivo de configuración del banner personalizado para un usuario."""
+    safe_user = "".join([c for c in username if c.isalnum() or c in ("-", "_")]).strip().lower()
+    if not safe_user:
+        safe_user = "default"
+    return os.path.join(os.path.dirname(__file__), f"banner_{safe_user}.txt")
+
+def load_user_banner(username):
+    """Carga la URL o ruta del banner personalizado para el usuario actual."""
+    if not username:
+        return None
+    banner_file = get_user_banner_path(username)
+    if os.path.exists(banner_file):
+        try:
+            with open(banner_file, "r", encoding="utf-8") as f:
+                content = f.read().strip()
+                return content if content else None
+        except Exception:
+            return None
+    return None
+
+def save_user_banner(username, banner_val):
+    """Guarda o limpia la URL del banner personalizado para el usuario actual."""
+    if not username:
+        return False
+    banner_file = get_user_banner_path(username)
+    try:
+        with open(banner_file, "w", encoding="utf-8") as f:
+            f.write(banner_val.strip() if banner_val else "")
+        return True
+    except Exception as e:
+        print(f"Error al guardar banner: {e}")
+        return False

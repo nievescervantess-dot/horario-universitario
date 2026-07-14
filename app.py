@@ -110,6 +110,12 @@ def apply_custom_theme(theme_name):
     
     st.markdown(f"""
         <style>
+        :root {{
+            --primary-color: {t['primary']} !important;
+            --background-color: {t['bg']} !important;
+            --secondary-background-color: {t['sidebar_bg']} !important;
+            --text-color: {t['text']} !important;
+        }}
         .stApp {{
             background-color: {t['bg']} !important;
             color: {t['text']} !important;
@@ -117,23 +123,30 @@ def apply_custom_theme(theme_name):
         [data-testid="stSidebar"] {{
             background-color: {t['sidebar_bg']} !important;
         }}
+        [data-testid="stSidebar"] * {{
+            color: {t['text']} !important;
+        }}
         /* Entradas de texto, números y selectores */
         input, select, textarea, div[data-baseweb="select"] > div {{
             background-color: {t['input_bg']} !important;
             color: {t['input_text']} !important;
             border-color: {t['input_border']} !important;
         }}
-        /* Menús desplegables (Popovers) */
-        ul[data-baseweb="menu"], div[data-baseweb="popover"] {{
+        /* Menús desplegables y opciones */
+        ul[data-baseweb="menu"], div[data-baseweb="popover"], div[role="listbox"] {{
             background-color: {t['input_bg']} !important;
             color: {t['input_text']} !important;
         }}
-        li[data-baseweb="option"] {{
+        li[data-baseweb="option"], div[role="option"] {{
             color: {t['input_text']} !important;
+            background-color: {t['input_bg']} !important;
+        }}
+        li[data-baseweb="option"]:hover, div[role="option"]:hover {{
+            background-color: {t['sidebar_bg']} !important;
         }}
         /* Párrafos, Títulos y Etiquetas */
         .stMarkdown, h1, h2, h3, h4, h5, h6, label, p, span {{
-            color: {t['text']} !important;
+            color: {t['text']};
         }}
         .main .block-container {{
             padding-top: 2rem;
@@ -152,9 +165,9 @@ def apply_custom_theme(theme_name):
             border-bottom: none;
         }}
         .stTabs [aria-selected="true"] {{
-            background-color: {t['bg']};
+            background-color: {t['bg']} !important;
             color: {t['primary']} !important;
-            border-bottom: 3px solid {t['primary']};
+            border-bottom: 3px solid {t['primary']} !important;
         }}
         /* Expanders */
         details[data-testid="stExpander"] {{
@@ -163,6 +176,10 @@ def apply_custom_theme(theme_name):
             border-radius: 8px !important;
         }}
         details[data-testid="stExpander"] summary span {{
+            color: {t['text']} !important;
+        }}
+        /* Contenedores st.metric */
+        [data-testid="stMetricValue"], [data-testid="stMetricLabel"] {{
             color: {t['text']} !important;
         }}
         </style>
@@ -175,11 +192,51 @@ theme_options = ["Claro Industrial 🛠️", "Modo Oscuro Cyberpunk 🌙", "Azul
 selected_theme_name = st.sidebar.selectbox("Selecciona un tema visual", theme_options, key="active_theme_select")
 active_theme = apply_custom_theme(selected_theme_name)
 
-# --- Banner y Título de la aplicación ---
+# --- Personalización de Banner ---
+active_user = st.session_state.get("username", "")
+current_user_banner = sm.load_user_banner(active_user) if active_user else None
+
+with st.sidebar.expander("🖼️ Personalizar mi Banner"):
+    if st.session_state.get("authenticated", False):
+        st.caption("Pega el enlace (URL) de una imagen o sube un archivo.")
+        banner_url_input = st.text_input("URL de Imagen", value=current_user_banner if current_user_banner and not current_user_banner.startswith("data:") else "", placeholder="https://ejemplo.com/mi_banner.jpg", key="banner_url_input")
+        uploaded_banner = st.file_uploader("O sube una imagen (.jpg, .png)", type=["jpg", "png", "jpeg", "webp"], key="user_banner_upload")
+        
+        col_b1, col_b2 = st.columns([1, 1])
+        with col_b1:
+            if st.button("Guardar Banner", key="save_banner_btn", type="primary"):
+                val_to_save = ""
+                if uploaded_banner is not None:
+                    import base64
+                    bytes_data = uploaded_banner.getvalue()
+                    b64_str = base64.b64encode(bytes_data).decode("utf-8")
+                    mime_type = uploaded_banner.type
+                    val_to_save = f"data:{mime_type};base64,{b64_str}"
+                elif banner_url_input.strip():
+                    val_to_save = banner_url_input.strip()
+                
+                if val_to_save:
+                    sm.save_user_banner(st.session_state.username, val_to_save)
+                    st.success("¡Banner guardado!")
+                    st.rerun()
+                else:
+                    st.error("Ingresa una URL o sube una imagen.")
+        with col_b2:
+            if st.button("Restablecer", key="reset_banner_btn"):
+                sm.save_user_banner(st.session_state.username, "")
+                st.info("Banner restablecido.")
+                st.rerun()
+    else:
+        st.info("Ingresa a tu sesión para personalizar tu banner personal.")
+
+# --- Renderizado de Banner y Título ---
 import os
-banner_path = os.path.join(os.path.dirname(__file__), "app_banner.jpg")
-if os.path.exists(banner_path):
-    st.image(banner_path, use_container_width=True)
+if current_user_banner:
+    st.image(current_user_banner, use_container_width=True)
+else:
+    banner_path = os.path.join(os.path.dirname(__file__), "app_banner.jpg")
+    if os.path.exists(banner_path):
+        st.image(banner_path, use_container_width=True)
 
 st.title("📅 Horario Universitario Interactivo")
 st.markdown("Gestiona tus asignaturas, profesores, aulas y visualiza tu semana académica de manera sencilla y moderna.")
