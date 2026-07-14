@@ -93,11 +93,11 @@ def apply_custom_theme(theme_name):
             opacity: 0.65 !important;
         }}
         /* Menús desplegables y opciones */
-        ul[data-baseweb="menu"], div[data-baseweb="popover"], div[role="listbox"] {{
+        ul[data-baseweb="menu"], div[data-baseweb="popover"], div[role="listbox"], div[role="menu"], div[role="dialog"] {{
             background-color: {t['input_bg']} !important;
             color: {t['input_text']} !important;
         }}
-        ul[data-baseweb="menu"] *, div[data-baseweb="popover"] *, div[role="listbox"] * {{
+        ul[data-baseweb="menu"] *, div[data-baseweb="popover"] *, div[role="listbox"] *, div[role="menu"] *, div[role="dialog"] * {{
             color: {t['input_text']} !important;
         }}
         li[data-baseweb="option"], div[role="option"] {{
