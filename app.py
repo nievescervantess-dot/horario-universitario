@@ -257,16 +257,16 @@ with st.sidebar.expander("➕ Agregar Nueva Clase", expanded=True):
     start_time = st.selectbox("Hora de Inicio", hours_options[:-1], index=2, key="add_start")
     end_time = st.selectbox("Hora de Fin", hours_options[1:], index=3, key="add_end")
     
-    # Paleta de colores predefinida (pasteles modernos y profesionales)
+    # Paleta de colores predefinida (Pasteles Femeninos y Modernos)
     colors = {
-        "Azul": "#2A6F97",
-        "Verde": "#52B788",
-        "Naranja": "#F4A261",
-        "Rojo/Coral": "#E76F51",
-        "Morado": "#7209B7",
-        "Teal": "#0081A7",
-        "Rosa": "#FFB5A7",
-        "Gris Oscuro": "#4A4E69"
+        "Rosa Pastel 🌸": "#FFB7B2",
+        "Azul Menta 🌊": "#A2C4C9",
+        "Verde Menta 🌿": "#B5EAD7",
+        "Lavanda Pastel 🪻": "#C7CEEA",
+        "Durazno Pastel 🍑": "#FFDAC1",
+        "Amarillo Pastel ☀️": "#FFF5BA",
+        "Rosa Chicle 💖": "#FF9AA2",
+        "Malva Soft 🪷": "#E8AEB7"
     }
     color_name = st.selectbox("Color de la tarjeta", list(colors.keys()), key="add_color")
     selected_color = colors[color_name]
@@ -516,9 +516,9 @@ with tab_calendar:
             .class-card {{
                 border-radius: 8px;
                 padding: 10px;
-                color: #FFFFFF;
-                font-weight: 500;
-                box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+                color: #1E293B;
+                font-weight: 600;
+                box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
                 display: flex;
                 flex-direction: column;
                 justify-content: center;
@@ -527,7 +527,7 @@ with tab_calendar:
                 height: 100%;
                 min-height: 60px;
                 transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-                border-left: 4px solid rgba(255, 255, 255, 0.4);
+                border-left: 4px solid rgba(0, 0, 0, 0.2);
             }}
             .class-card:hover {{
                 transform: translateY(-3px) scale(1.02);
@@ -589,6 +589,40 @@ with tab_calendar:
         return html
 
     st.markdown(generate_html_schedule(classes, active_theme), unsafe_allow_html=True)
+    
+    if classes:
+        st.markdown("<div style='height: 15px;'></div>", unsafe_allow_html=True)
+        col_pdf1, col_pdf2 = st.columns([1, 1])
+        with col_pdf1:
+            try:
+                pdf_bytes = sm.generate_pdf_schedule(st.session_state.username, classes)
+                st.download_button(
+                    label="📄 Descargar Horario en PDF (A4 Horizontal)",
+                    data=pdf_bytes,
+                    file_name=f"horario_{st.session_state.username}.pdf",
+                    mime="application/pdf",
+                    type="primary",
+                    use_container_width=True
+                )
+            except Exception as e:
+                st.error(f"Error al generar PDF: {e}")
+        with col_pdf2:
+            st.markdown("""
+                <button onclick="window.print()" style="
+                    width: 100%;
+                    background-color: #475569;
+                    color: white;
+                    border: none;
+                    padding: 9px 16px;
+                    font-size: 14px;
+                    font-weight: 600;
+                    border-radius: 6px;
+                    cursor: pointer;
+                    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+                ">
+                    🖨️ Imprimir / Guardar en Navegador
+                </button>
+            """, unsafe_allow_html=True)
 
 # pestaña 2: Lista Detallada
 with tab_list:

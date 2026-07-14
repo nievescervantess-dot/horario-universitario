@@ -19,23 +19,39 @@ def is_cloud_configured():
 def get_sheets_client():
     """Inicializa y retorna el cliente de gspread usando las credenciales secretas."""
     import gspread
-    # Obtener una copia editable de las credenciales de secrets
-    creds = {k: v for k, v in st.secrets["gcp_service_account"].items()}
-    
-    # Limpieza robusta: eliminar comillas accidentales que el usuario pudiera copiar del JSON original
-    for key in creds:
-        if isinstance(creds[key], str):
-            val = creds[key].strip()
-            # Si tiene comillas dobles o simples al inicio y al final, las removemos
-            if (val.startswith('"') and val.endswith('"')) or (val.startswith("'") and val.endswith("'")):
-                val = val[1:-1].strip()
-            creds[key] = val
-            
-    # Limpiar saltos de línea en la clave privada si vienen escapados como texto \n o \\n
-    if "private_key" in creds:
-        creds["private_key"] = creds["private_key"].replace("\\n", "\n").replace("\n", "\n")
+    try:
+        # Obtener una copia de las credenciales de secrets
+        creds = {k: v for k, v in st.secrets["gcp_service_account"].items()}
         
-    return gspread.service_account_from_dict(creds)
+        # Limpieza de comillas accidentales
+        for key in creds:
+            if isinstance(creds[key], str):
+                val = creds[key].strip()
+                if (val.startswith('"') and val.endswith('"')) or (val.startswith("'") and val.endswith("'")):
+                    val = val[1:-1].strip()
+                creds[key] = val
+                
+        # Limpiar clave privada
+        if "private_key" in creds:
+            pk = creds["private_key"]
+            pk = pk.replace("\\n", "\n")
+            creds["private_key"] = pk
+            
+        return gspread.service_account_from_dict(creds)
+    except Exception as e:
+        # Diagnóstico visual seguro para el usuario en caso de error
+        pk_info = "No encontrada"
+        if "gcp_service_account" in st.secrets and "private_key" in st.secrets["gcp_service_account"]:
+            raw_pk = st.secrets["gcp_service_account"]["private_key"]
+            starts_ok = raw_pk.startswith("-----BEGIN PRIVATE KEY-----")
+            ends_ok = raw_pk.strip().endswith("-----END PRIVATE KEY-----")
+            has_escaped_n = "\\n" in raw_pk
+            has_real_newline = "\n" in raw_pk
+            length = len(raw_pk)
+            pk_info = f"Largo: {length} chars | Inicia cabecera ok: {starts_ok} | Termina pie ok: {ends_ok} | Contiene '\\n' texto: {has_escaped_n} | Contiene enter real: {has_real_newline}"
+        
+        st.error(f"⚙️ Diagnóstico de tu Secreto en Streamlit:\n{pk_info}")
+        raise e
 
 def get_worksheet(sheet_name):
     """Obtiene una pestaña de la hoja de cálculo de Google. Si no existe, la crea con su cabecera."""
@@ -371,3 +387,174 @@ def populate_calendar_grid(classes):
             if day in grid and hour_str in grid[day]:
                 grid[day][hour_str].append(c)
     return grid
+
+# --- Generador de PDF (ReportLab) ---
+
+def generate_pdf_schedule(username, schedule):
+    """Genera un archivo PDF binario en orientación horizontal (Landscape A4) con el horario del usuario."""
+    import io
+    import datetime
+    from reportlab.lib.pagesizes import A4, landscape
+    from reportlab.lib import colors as pdf_colors
+    from reportlab.platypus import SimpleDocTemplate, Paragraph, Table, TableStyle, Spacer, HRFlowable
+    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+    from reportlab.lib.units import inch
+
+    buffer = io.BytesIO()
+    
+    # Documento A4 Horizontal con márgenes de 0.4 pulgadas para maximizar espacio
+    doc = SimpleDocTemplate(
+        buffer,
+        pagesize=landscape(A4),
+        rightMargin=0.4*inch,
+        leftMargin=0.4*inch,
+        topMargin=0.4*inch,
+        bottomMargin=0.4*inch
+    )
+    
+    elements = []
+    styles = getSampleStyleSheet()
+    
+    # Estilos de párrafos
+    title_style = ParagraphStyle(
+        'DocTitle',
+        parent=styles['Heading1'],
+        fontName='Helvetica-Bold',
+        fontSize=18,
+        textColor=pdf_colors.HexColor('#1E293B'),
+        spaceAfter=2
+    )
+    subtitle_style = ParagraphStyle(
+        'DocSubTitle',
+        parent=styles['Normal'],
+        fontName='Helvetica',
+        fontSize=9.5,
+        textColor=pdf_colors.HexColor('#64748B'),
+        spaceAfter=10
+    )
+    cell_header_style = ParagraphStyle(
+        'CellHeader',
+        parent=styles['Normal'],
+        fontName='Helvetica-Bold',
+        fontSize=9.5,
+        alignment=1, # Centrado
+        textColor=pdf_colors.HexColor('#FFFFFF')
+    )
+    cell_time_style = ParagraphStyle(
+        'CellTime',
+        parent=styles['Normal'],
+        fontName='Helvetica-Bold',
+        fontSize=8.5,
+        alignment=1, # Centrado
+        textColor=pdf_colors.HexColor('#334155')
+    )
+    cell_class_name_style = ParagraphStyle(
+        'CellClassName',
+        parent=styles['Normal'],
+        fontName='Helvetica-Bold',
+        fontSize=8,
+        alignment=1,
+        textColor=pdf_colors.HexColor('#1E293B'),
+        spaceAfter=1
+    )
+    cell_class_detail_style = ParagraphStyle(
+        'CellClassDetail',
+        parent=styles['Normal'],
+        fontName='Helvetica',
+        fontSize=7,
+        alignment=1,
+        textColor=pdf_colors.HexColor('#334155')
+    )
+    
+    # Encabezado del documento
+    now_str = datetime.datetime.now().strftime("%d/%m/%Y %H:%M")
+    elements.append(Paragraph(f"📅 Horario Universitario de Clases", title_style))
+    elements.append(Paragraph(f"Usuario / Estudiante: <b>{username}</b> &nbsp;&nbsp;|&nbsp;&nbsp; Fecha de emisión: {now_str}", subtitle_style))
+    elements.append(HRFlowable(width="100%", thickness=1, color=pdf_colors.HexColor('#CBD5E1'), spaceAfter=8))
+    
+    if not schedule:
+        elements.append(Paragraph("No hay clases registradas en el horario.", styles['Normal']))
+    else:
+        # Calcular rango de horas
+        start_hours = [int(c["start_time"].split(":")[0]) for c in schedule]
+        end_hours = [int(c["end_time"].split(":")[0]) for c in schedule]
+        min_hour = max(6, min(start_hours) - 1)
+        max_hour = min(22, max(end_hours) + 1)
+        hours_range = [f"{h:02d}:00" for h in range(min_hour, max_hour)]
+        
+        has_sunday = any(c["day"] == "Domingo" for c in schedule)
+        active_days = DAYS_OF_WEEK if has_sunday else DAYS_OF_WEEK[:-1]
+        
+        # Mapear matriz [día][hora]
+        grid = {d: {h: [] for h in hours_range} for d in active_days}
+        for c in schedule:
+            c_day = c["day"]
+            if c_day not in grid:
+                continue
+            c_start = int(c["start_time"].split(":")[0])
+            c_end = int(c["end_time"].split(":")[0])
+            for h in range(c_start, c_end):
+                h_str = f"{h:02d}:00"
+                if h_str in grid[c_day]:
+                    grid[c_day][h_str].append(c)
+                    
+        # Construir datos de la tabla ReportLab
+        table_data = []
+        header_row = [Paragraph("Hora", cell_header_style)]
+        for d in active_days:
+            header_row.append(Paragraph(d, cell_header_style))
+        table_data.append(header_row)
+        
+        table_cell_styles = [
+            ('BACKGROUND', (0,0), (-1,0), pdf_colors.HexColor('#1E293B')),
+            ('ALIGN', (0,0), (-1,-1), 'CENTER'),
+            ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
+            ('GRID', (0,0), (-1,-1), 0.5, pdf_colors.HexColor('#CBD5E1')),
+            ('BACKGROUND', (0,1), (0,-1), pdf_colors.HexColor('#F1F5F9')),
+        ]
+        
+        for r_idx, h_str in enumerate(hours_range, start=1):
+            row = [Paragraph(h_str, cell_time_style)]
+            for c_idx, d in enumerate(active_days, start=1):
+                classes_in_cell = grid[d][h_str]
+                if not classes_in_cell:
+                    row.append("")
+                else:
+                    cell_elements = []
+                    cell_bg = None
+                    for cls in classes_in_cell:
+                        cell_elements.append(Paragraph(cls['name'], cell_class_name_style))
+                        cell_elements.append(Paragraph(f"📍 {cls['classroom']} | 👤 {cls['professor']}", cell_class_detail_style))
+                        raw_color = cls.get('color', '#A2C4C9')
+                        try:
+                            cell_bg = pdf_colors.HexColor(raw_color)
+                        except Exception:
+                            cell_bg = pdf_colors.HexColor('#A2C4C9')
+                    
+                    row.append(cell_elements)
+                    if cell_bg:
+                        table_cell_styles.append(('BACKGROUND', (c_idx, r_idx), (c_idx, r_idx), cell_bg))
+                        
+            table_data.append(row)
+            
+        # Anchos de columna
+        available_width = 10.8 * inch # A4 Landscape printable width
+        time_col_w = 0.8 * inch
+        day_col_w = (available_width - time_col_w) / len(active_days)
+        col_widths = [time_col_w] + [day_col_w] * len(active_days)
+        
+        t_table = Table(table_data, colWidths=col_widths, repeatRows=1)
+        t_table.setStyle(TableStyle(table_cell_styles))
+        elements.append(t_table)
+        
+        # Pie de página / Métricas
+        elements.append(Spacer(1, 8))
+        total_hours = sum(int(c["end_time"].split(":")[0]) - int(c["start_time"].split(":")[0]) for c in schedule)
+        unique_mats = len(set(c["name"].lower().strip() for c in schedule))
+        metrics_p = Paragraph(f"<b>Total Asignaturas:</b> {unique_mats} &nbsp;&nbsp;|&nbsp;&nbsp; <b>Total Horas Semanales:</b> {total_hours} hrs", subtitle_style)
+        elements.append(metrics_p)
+        
+    doc.build(elements)
+    pdf_val = buffer.getvalue()
+    buffer.close()
+    return pdf_val
