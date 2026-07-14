@@ -66,6 +66,12 @@ if st.session_state.authenticated:
     if st.sidebar.button("Cerrar Sesión", type="secondary"):
         st.session_state.authenticated = False
         st.session_state.username = ""
+        if "classes" in st.session_state:
+            del st.session_state["classes"]
+        if "grades_data" in st.session_state:
+            del st.session_state["grades_data"]
+        st.session_state.needs_reload_classes = True
+        st.session_state.needs_reload_grades = True
         st.rerun()
 else:
     # Ingresar el nombre del usuario
@@ -86,6 +92,8 @@ else:
                 if sm.verify_user(username_input, password):
                     st.session_state.username = username_input
                     st.session_state.authenticated = True
+                    st.session_state.needs_reload_classes = True
+                    st.session_state.needs_reload_grades = True
                     st.success("¡Sesión iniciada con éxito!")
                     st.rerun()
                 else:
@@ -101,6 +109,8 @@ else:
                     if sm.register_user(username_input, password):
                         st.session_state.username = username_input
                         st.session_state.authenticated = True
+                        st.session_state.needs_reload_classes = True
+                        st.session_state.needs_reload_grades = True
                         st.sidebar.success("¡Usuario registrado y autenticado!")
                         st.rerun()
                     else:
@@ -122,8 +132,12 @@ if not st.session_state.authenticated:
     """)
     st.stop()
 
-# Cargar clases existentes para el usuario activo
-classes = sm.load_schedule(st.session_state.username)
+# Cargar clases existentes para el usuario activo (usando caché en session_state)
+if "classes" not in st.session_state or st.session_state.get("needs_reload_classes", True):
+    st.session_state.classes = sm.load_schedule(st.session_state.username)
+    st.session_state.needs_reload_classes = False
+
+classes = st.session_state.classes
 
 # Sidebar: Acciones de gestión (Agregar / Eliminar clases)
 st.sidebar.header("🛠️ Gestión de Clases")
@@ -203,6 +217,7 @@ with st.sidebar.expander("➕ Agregar Nueva Clase", expanded=True):
                 if not has_collision:
                     new_cls = sm.add_class(st.session_state.username, name, professor, classroom, day, start_time, end_time, selected_color)
                     if new_cls:
+                        st.session_state.needs_reload_classes = True
                         st.success(f"¡{name} agregada correctamente!")
                         st.rerun()
                     else:
@@ -303,6 +318,7 @@ if classes:
                         "color": edit_color
                     }
                     if sm.update_class(st.session_state.username, cls_id, updated_data):
+                        st.session_state.needs_reload_classes = True
                         st.success("¡Clase actualizada correctamente!")
                         st.rerun()
                     else:
@@ -319,6 +335,7 @@ if classes:
         )
         if st.button("Eliminar Seleccionada", type="secondary", key="delete_submit_btn"):
             if sm.delete_class(st.session_state.username, class_to_delete["id"]):
+                st.session_state.needs_reload_classes = True
                 st.success(f"Clase '{class_to_delete['name']}' eliminada.")
                 st.rerun()
             else:
@@ -654,7 +671,12 @@ with tab_grades:
         
         selected_subject = st.selectbox("Selecciona una materia", unique_subjects)
         
-        grades_data = sm.load_grades(st.session_state.username)
+        # Carga optimizada con caché para evitar agotar la cuota de lectura del API de Google Sheets
+        if "grades_data" not in st.session_state or st.session_state.get("needs_reload_grades", True):
+            st.session_state.grades_data = sm.load_grades(st.session_state.username)
+            st.session_state.needs_reload_grades = False
+            
+        grades_data = st.session_state.grades_data
         if selected_subject not in grades_data:
             grades_data[selected_subject] = []
             
@@ -677,6 +699,7 @@ with tab_grades:
                     "grade": eval_grade
                 })
                 sm.save_grades(st.session_state.username, grades_data)
+                st.session_state.needs_reload_grades = True
                 st.success("Nota agregada correctamente.")
                 st.rerun()
                 
@@ -732,6 +755,7 @@ with tab_grades:
                     # Remover el elemento de la lista
                     grades_data[selected_subject].pop(idx)
                     sm.save_grades(st.session_state.username, grades_data)
+                    st.session_state.needs_reload_grades = True
                     st.success("Nota eliminada correctamente.")
                     st.rerun()
                     
@@ -741,5 +765,6 @@ with tab_grades:
                 if st.button("🚨 Limpiar todas las notas", type="secondary", key="clear_all_grades_btn", use_container_width=True):
                     grades_data[selected_subject] = []
                     sm.save_grades(st.session_state.username, grades_data)
+                    st.session_state.needs_reload_grades = True
                     st.success("Se eliminaron todas las notas de esta asignatura.")
                     st.rerun()
