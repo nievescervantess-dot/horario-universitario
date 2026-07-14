@@ -42,7 +42,12 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Título de la aplicación
+# --- Banner y Título de la aplicación ---
+import os
+banner_path = os.path.join(os.path.dirname(__file__), "app_banner.jpg")
+if os.path.exists(banner_path):
+    st.image(banner_path, use_container_width=True)
+
 st.title("📅 Horario Universitario Interactivo")
 st.markdown("Gestiona tus asignaturas, profesores, aulas y visualiza tu semana académica de manera sencilla y moderna.")
 
@@ -375,69 +380,78 @@ with tab_calendar:
             .schedule-container {
                 overflow-x: auto;
                 margin-top: 15px;
+                border-radius: 12px;
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
             }
             .schedule-table {
                 width: 100%;
                 border-collapse: collapse;
                 font-family: 'Inter', -apple-system, sans-serif;
-                border-radius: 8px;
                 overflow: hidden;
-                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
             }
             .schedule-table th {
-                background-color: #2F3E46;
-                color: white;
+                background-color: #1E293B;
+                color: #F8FAFC;
                 text-align: center;
-                padding: 14px;
-                font-size: 14px;
+                padding: 16px;
+                font-size: 13px;
                 font-weight: 600;
                 letter-spacing: 0.5px;
-                border: 1px solid #344A53;
+                text-transform: uppercase;
+                border-bottom: 3px solid #0F172A;
             }
             .schedule-table td {
-                border: 1px solid #EAEAEB;
+                border: 1px solid #E2E8F0;
                 padding: 6px;
                 text-align: center;
-                height: 70px;
+                height: 80px;
                 vertical-align: middle;
                 font-size: 13px;
-                background-color: white;
+                background-color: #FFFFFF;
             }
             .time-col {
-                background-color: #F8F9FA !important;
-                font-weight: 600;
+                background-color: #F1F5F9 !important;
+                font-weight: 700;
                 width: 110px;
-                color: #495057;
+                color: #475569;
                 font-size: 12px;
-                border-right: 2px solid #DEE2E6 !important;
+                border-right: 2px solid #CBD5E1 !important;
             }
             .class-card {
-                border-radius: 6px;
-                padding: 8px;
-                color: white;
+                border-radius: 8px;
+                padding: 10px;
+                color: #FFFFFF;
                 font-weight: 500;
-                box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+                box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
                 display: flex;
                 flex-direction: column;
                 justify-content: center;
-                align-items: center;
+                align-items: flex-start;
+                text-align: left;
                 height: 100%;
-                min-height: 55px;
-                transition: transform 0.2s ease;
+                min-height: 60px;
+                transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+                border-left: 4px solid rgba(255, 255, 255, 0.4);
             }
             .class-card:hover {
-                transform: scale(1.02);
+                transform: translateY(-3px) scale(1.02);
+                box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+                filter: brightness(1.05);
             }
             .class-name {
-                font-size: 12px;
-                font-weight: bold;
-                margin-bottom: 3px;
+                font-size: 13px;
+                font-weight: 700;
+                margin-bottom: 4px;
                 word-wrap: break-word;
+                letter-spacing: 0.3px;
+                line-height: 1.2;
             }
             .class-details {
-                font-size: 10px;
-                opacity: 0.95;
-                line-height: 1.2;
+                font-size: 11px;
+                opacity: 0.9;
+                line-height: 1.3;
+                margin-top: 1px;
+                font-weight: 400;
             }
         </style>
         <div class="schedule-container">
