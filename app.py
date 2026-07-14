@@ -12,6 +12,21 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+# --- Función de Cálculo de Contraste Dinámico (W3C Standard) ---
+def get_contrast_text_color(hex_color):
+    """Calcula el color de texto (oscuro o claro) de alto contraste según la luminancia del fondo."""
+    if not hex_color or not isinstance(hex_color, str):
+        return "#1E293B"
+    clean_hex = hex_color.lstrip('#')
+    if len(clean_hex) == 6:
+        try:
+            r, g, b = int(clean_hex[0:2], 16), int(clean_hex[2:4], 16), int(clean_hex[4:6], 16)
+            luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255
+            return "#1E293B" if luminance > 0.55 else "#FFFFFF"
+        except ValueError:
+            return "#1E293B"
+    return "#1E293B"
+
 # --- Función de Temas Personalizados Dinámicos ---
 def apply_custom_theme(theme_name):
     themes = {
@@ -20,6 +35,9 @@ def apply_custom_theme(theme_name):
             "sidebar_bg": "#E9ECEF",
             "text": "#212529",
             "primary": "#2A6F97",
+            "input_bg": "#FFFFFF",
+            "input_text": "#212529",
+            "input_border": "#CED4DA",
             "table_th_bg": "#1E293B",
             "table_th_text": "#F8FAFC",
             "table_td_bg": "#FFFFFF",
@@ -32,6 +50,9 @@ def apply_custom_theme(theme_name):
             "sidebar_bg": "#111827",
             "text": "#F3F4F6",
             "primary": "#00F5D4",
+            "input_bg": "#1F2937",
+            "input_text": "#F3F4F6",
+            "input_border": "#374151",
             "table_th_bg": "#1F2937",
             "table_th_text": "#00F5D4",
             "table_td_bg": "#111827",
@@ -44,6 +65,9 @@ def apply_custom_theme(theme_name):
             "sidebar_bg": "#1E3E62",
             "text": "#F1F5F9",
             "primary": "#38BDF8",
+            "input_bg": "#1E293B",
+            "input_text": "#F8FAFC",
+            "input_border": "#334155",
             "table_th_bg": "#1E3E62",
             "table_th_text": "#38BDF8",
             "table_td_bg": "#1E293B",
@@ -56,6 +80,9 @@ def apply_custom_theme(theme_name):
             "sidebar_bg": "#E8F1F2",
             "text": "#1D3557",
             "primary": "#2A9D8F",
+            "input_bg": "#FFFFFF",
+            "input_text": "#1D3557",
+            "input_border": "#CBD5E1",
             "table_th_bg": "#2A9D8F",
             "table_th_text": "#FFFFFF",
             "table_td_bg": "#FFFFFF",
@@ -68,6 +95,9 @@ def apply_custom_theme(theme_name):
             "sidebar_bg": "#FCE4EC",
             "text": "#4A0E17",
             "primary": "#FF1493",
+            "input_bg": "#FFFFFF",
+            "input_text": "#4A0E17",
+            "input_border": "#F8BBD0",
             "table_th_bg": "#FFB6C1",
             "table_th_text": "#4A0E17",
             "table_td_bg": "#FFFFFF",
@@ -87,29 +117,53 @@ def apply_custom_theme(theme_name):
         [data-testid="stSidebar"] {{
             background-color: {t['sidebar_bg']} !important;
         }}
+        /* Entradas de texto, números y selectores */
+        input, select, textarea, div[data-baseweb="select"] > div {{
+            background-color: {t['input_bg']} !important;
+            color: {t['input_text']} !important;
+            border-color: {t['input_border']} !important;
+        }}
+        /* Menús desplegables (Popovers) */
+        ul[data-baseweb="menu"], div[data-baseweb="popover"] {{
+            background-color: {t['input_bg']} !important;
+            color: {t['input_text']} !important;
+        }}
+        li[data-baseweb="option"] {{
+            color: {t['input_text']} !important;
+        }}
+        /* Párrafos, Títulos y Etiquetas */
         .stMarkdown, h1, h2, h3, h4, h5, h6, label, p, span {{
             color: {t['text']} !important;
         }}
         .main .block-container {{
             padding-top: 2rem;
         }}
+        /* Pestañas */
         .stTabs [data-baseweb="tab-list"] {{
-            gap: 24px;
+            gap: 16px;
         }}
         .stTabs [data-baseweb="tab"] {{
-            height: 50px;
-            white-space: pre-wrap;
+            height: 48px;
             background-color: {t['sidebar_bg']};
-            border-radius: 4px 4px 0px 0px;
-            gap: 1px;
-            padding-top: 10px;
-            padding-bottom: 10px;
+            border-radius: 6px 6px 0px 0px;
             font-weight: 600;
-            color: {t['text']};
+            color: {t['text']} !important;
+            border: 1px solid {t['input_border']};
+            border-bottom: none;
         }}
         .stTabs [aria-selected="true"] {{
             background-color: {t['bg']};
-            border-bottom: 2px solid {t['primary']};
+            color: {t['primary']} !important;
+            border-bottom: 3px solid {t['primary']};
+        }}
+        /* Expanders */
+        details[data-testid="stExpander"] {{
+            background-color: {t['sidebar_bg']} !important;
+            border: 1px solid {t['input_border']} !important;
+            border-radius: 8px !important;
+        }}
+        details[data-testid="stExpander"] summary span {{
+            color: {t['text']} !important;
         }}
         </style>
     """, unsafe_allow_html=True)
@@ -573,11 +627,13 @@ with tab_calendar:
                     # En caso de que coincidan materias (cruce), las apilamos
                     html += "<td style='padding: 4px;'>"
                     for c_slot in classes_in_slot:
+                        card_bg = c_slot.get('color', '#A2C4C9')
+                        text_color = get_contrast_text_color(card_bg)
                         html += f"""
-                        <div class="class-card" style="background-color: {c_slot['color']}; margin-bottom: 2px;">
-                            <div class="class-name">{c_slot['name']}</div>
-                            <div class="class-details">👤 {c_slot['professor']}</div>
-                            <div class="class-details">📍 {c_slot['classroom']}</div>
+                        <div class="class-card" style="background-color: {card_bg}; color: {text_color} !important; margin-bottom: 2px;">
+                            <div class="class-name" style="color: {text_color} !important;">{c_slot['name']}</div>
+                            <div class="class-details" style="color: {text_color} !important;">👤 {c_slot['professor']}</div>
+                            <div class="class-details" style="color: {text_color} !important;">📍 {c_slot['classroom']}</div>
                         </div>
                         """
                     html += "</td>"
