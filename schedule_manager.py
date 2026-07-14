@@ -20,6 +20,9 @@ def get_sheets_client():
     """Inicializa y retorna el cliente de gspread usando las credenciales secretas."""
     import gspread
     creds = dict(st.secrets["gcp_service_account"])
+    # Limpiar saltos de línea en la clave privada si vienen escapados como texto \n
+    if "private_key" in creds:
+        creds["private_key"] = creds["private_key"].replace("\\n", "\n")
     return gspread.service_account_from_dict(creds)
 
 def get_worksheet(sheet_name):
