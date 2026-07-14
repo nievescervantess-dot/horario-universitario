@@ -30,83 +30,38 @@ def get_contrast_text_color(hex_color):
 # --- Función de Temas Personalizados Dinámicos ---
 def apply_custom_theme(theme_name):
     themes = {
-        "Claro Industrial 🛠️": {
+        "Tema Claro ☀️": {
             "bg": "#F8F9FA",
             "sidebar_bg": "#E9ECEF",
-            "text": "#212529",
+            "text": "#1E293B",
             "primary": "#2A6F97",
             "input_bg": "#FFFFFF",
-            "input_text": "#212529",
+            "input_text": "#1E293B",
             "input_border": "#CED4DA",
-            "table_th_bg": "#1E293B",
-            "table_th_text": "#F8FAFC",
+            "table_th_bg": "#E2E8F0",
+            "table_th_text": "#1E293B",
             "table_td_bg": "#FFFFFF",
             "table_td_border": "#E2E8F0",
             "time_col_bg": "#F1F5F9",
             "time_col_text": "#475569"
         },
-        "Modo Oscuro Cyberpunk 🌙": {
+        "Tema Oscuro 🌙": {
             "bg": "#0B0F19",
             "sidebar_bg": "#111827",
-            "text": "#F3F4F6",
+            "text": "#F8FAFC",
             "primary": "#00F5D4",
             "input_bg": "#1F2937",
-            "input_text": "#F3F4F6",
+            "input_text": "#F8FAFC",
             "input_border": "#374151",
             "table_th_bg": "#1F2937",
-            "table_th_text": "#00F5D4",
+            "table_th_text": "#F8FAFC",
             "table_td_bg": "#111827",
             "table_td_border": "#374151",
             "time_col_bg": "#1F2937",
             "time_col_text": "#9CA3AF"
-        },
-        "Azul Noche Deep 🫐": {
-            "bg": "#0B192C",
-            "sidebar_bg": "#1E3E62",
-            "text": "#F1F5F9",
-            "primary": "#38BDF8",
-            "input_bg": "#1E293B",
-            "input_text": "#F8FAFC",
-            "input_border": "#334155",
-            "table_th_bg": "#1E3E62",
-            "table_th_text": "#38BDF8",
-            "table_td_bg": "#1E293B",
-            "table_td_border": "#334155",
-            "time_col_bg": "#0B192C",
-            "time_col_text": "#94A3B8"
-        },
-        "Naturaleza Menta 🌿": {
-            "bg": "#F4F9F4",
-            "sidebar_bg": "#E8F1F2",
-            "text": "#1D3557",
-            "primary": "#2A9D8F",
-            "input_bg": "#FFFFFF",
-            "input_text": "#1D3557",
-            "input_border": "#CBD5E1",
-            "table_th_bg": "#2A9D8F",
-            "table_th_text": "#FFFFFF",
-            "table_td_bg": "#FFFFFF",
-            "table_td_border": "#CBD5E1",
-            "time_col_bg": "#E8F1F2",
-            "time_col_text": "#2A9D8F"
-        },
-        "Tema Kcorro ✨🎀": {
-            "bg": "#FFF0F5",
-            "sidebar_bg": "#FCE4EC",
-            "text": "#4A0E17",
-            "primary": "#FF1493",
-            "input_bg": "#FFFFFF",
-            "input_text": "#4A0E17",
-            "input_border": "#F8BBD0",
-            "table_th_bg": "#FFB6C1",
-            "table_th_text": "#4A0E17",
-            "table_td_bg": "#FFFFFF",
-            "table_td_border": "#F8BBD0",
-            "time_col_bg": "#FCE4EC",
-            "time_col_text": "#C2185B"
         }
     }
-    t = themes.get(theme_name, themes["Claro Industrial 🛠️"])
+    t = themes.get(theme_name, themes["Tema Claro ☀️"])
     
     st.markdown(f"""
         <style>
@@ -230,7 +185,7 @@ def apply_custom_theme(theme_name):
 
 # Selector de Temas en el Panel Lateral
 st.sidebar.header("🎨 Apariencia y Tema")
-theme_options = ["Claro Industrial 🛠️", "Modo Oscuro Cyberpunk 🌙", "Azul Noche Deep 🫐", "Naturaleza Menta 🌿", "Tema Kcorro ✨🎀"]
+theme_options = ["Tema Claro ☀️", "Tema Oscuro 🌙"]
 selected_theme_name = st.sidebar.selectbox("Selecciona un tema visual", theme_options, key="active_theme_select")
 active_theme = apply_custom_theme(selected_theme_name)
 
