@@ -97,6 +97,9 @@ def apply_custom_theme(theme_name):
             background-color: {t['input_bg']} !important;
             color: {t['input_text']} !important;
         }}
+        ul[data-baseweb="menu"] *, div[data-baseweb="popover"] *, div[role="listbox"] * {{
+            color: {t['input_text']} !important;
+        }}
         li[data-baseweb="option"], div[role="option"] {{
             color: {t['input_text']} !important;
             background-color: {t['input_bg']} !important;
