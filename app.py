@@ -62,6 +62,18 @@ def apply_custom_theme(theme_name):
             "table_td_border": "#CBD5E1",
             "time_col_bg": "#E8F1F2",
             "time_col_text": "#2A9D8F"
+        },
+        "Tema Kcorro ✨🎀": {
+            "bg": "#FFF0F5",
+            "sidebar_bg": "#FCE4EC",
+            "text": "#4A0E17",
+            "primary": "#FF1493",
+            "table_th_bg": "#FFB6C1",
+            "table_th_text": "#4A0E17",
+            "table_td_bg": "#FFFFFF",
+            "table_td_border": "#F8BBD0",
+            "time_col_bg": "#FCE4EC",
+            "time_col_text": "#C2185B"
         }
     }
     t = themes.get(theme_name, themes["Claro Industrial 🛠️"])
@@ -105,7 +117,7 @@ def apply_custom_theme(theme_name):
 
 # Selector de Temas en el Panel Lateral
 st.sidebar.header("🎨 Apariencia y Tema")
-theme_options = ["Claro Industrial 🛠️", "Modo Oscuro Cyberpunk 🌙", "Azul Noche Deep 🫐", "Naturaleza Menta 🌿"]
+theme_options = ["Claro Industrial 🛠️", "Modo Oscuro Cyberpunk 🌙", "Azul Noche Deep 🫐", "Naturaleza Menta 🌿", "Tema Kcorro ✨🎀"]
 selected_theme_name = st.sidebar.selectbox("Selecciona un tema visual", theme_options, key="active_theme_select")
 active_theme = apply_custom_theme(selected_theme_name)
 
