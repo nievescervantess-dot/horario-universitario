@@ -19,10 +19,22 @@ def is_cloud_configured():
 def get_sheets_client():
     """Inicializa y retorna el cliente de gspread usando las credenciales secretas."""
     import gspread
-    creds = dict(st.secrets["gcp_service_account"])
-    # Limpiar saltos de línea en la clave privada si vienen escapados como texto \n
+    # Obtener una copia editable de las credenciales de secrets
+    creds = {k: v for k, v in st.secrets["gcp_service_account"].items()}
+    
+    # Limpieza robusta: eliminar comillas accidentales que el usuario pudiera copiar del JSON original
+    for key in creds:
+        if isinstance(creds[key], str):
+            val = creds[key].strip()
+            # Si tiene comillas dobles o simples al inicio y al final, las removemos
+            if (val.startswith('"') and val.endswith('"')) or (val.startswith("'") and val.endswith("'")):
+                val = val[1:-1].strip()
+            creds[key] = val
+            
+    # Limpiar saltos de línea en la clave privada si vienen escapados como texto \n o \\n
     if "private_key" in creds:
-        creds["private_key"] = creds["private_key"].replace("\\n", "\n")
+        creds["private_key"] = creds["private_key"].replace("\\n", "\n").replace("\n", "\n")
+        
     return gspread.service_account_from_dict(creds)
 
 def get_worksheet(sheet_name):
