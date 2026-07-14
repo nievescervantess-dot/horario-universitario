@@ -12,35 +12,102 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Estilo global de la app para mejorar la estética
-st.markdown("""
-    <style>
-    .main .block-container {
-        padding-top: 2rem;
+# --- Función de Temas Personalizados Dinámicos ---
+def apply_custom_theme(theme_name):
+    themes = {
+        "Claro Industrial 🛠️": {
+            "bg": "#F8F9FA",
+            "sidebar_bg": "#E9ECEF",
+            "text": "#212529",
+            "primary": "#2A6F97",
+            "table_th_bg": "#1E293B",
+            "table_th_text": "#F8FAFC",
+            "table_td_bg": "#FFFFFF",
+            "table_td_border": "#E2E8F0",
+            "time_col_bg": "#F1F5F9",
+            "time_col_text": "#475569"
+        },
+        "Modo Oscuro Cyberpunk 🌙": {
+            "bg": "#0B0F19",
+            "sidebar_bg": "#111827",
+            "text": "#F3F4F6",
+            "primary": "#00F5D4",
+            "table_th_bg": "#1F2937",
+            "table_th_text": "#00F5D4",
+            "table_td_bg": "#111827",
+            "table_td_border": "#374151",
+            "time_col_bg": "#1F2937",
+            "time_col_text": "#9CA3AF"
+        },
+        "Azul Noche Deep 🫐": {
+            "bg": "#0B192C",
+            "sidebar_bg": "#1E3E62",
+            "text": "#F1F5F9",
+            "primary": "#38BDF8",
+            "table_th_bg": "#1E3E62",
+            "table_th_text": "#38BDF8",
+            "table_td_bg": "#1E293B",
+            "table_td_border": "#334155",
+            "time_col_bg": "#0B192C",
+            "time_col_text": "#94A3B8"
+        },
+        "Naturaleza Menta 🌿": {
+            "bg": "#F4F9F4",
+            "sidebar_bg": "#E8F1F2",
+            "text": "#1D3557",
+            "primary": "#2A9D8F",
+            "table_th_bg": "#2A9D8F",
+            "table_th_text": "#FFFFFF",
+            "table_td_bg": "#FFFFFF",
+            "table_td_border": "#CBD5E1",
+            "time_col_bg": "#E8F1F2",
+            "time_col_text": "#2A9D8F"
+        }
     }
-    h1 {
-        color: #2F3E46;
-        font-family: 'Outfit', 'Inter', sans-serif;
-    }
-    .stTabs [data-baseweb="tab-list"] {
-        gap: 24px;
-    }
-    .stTabs [data-baseweb="tab"] {
-        height: 50px;
-        white-space: pre-wrap;
-        background-color: #F8F9FA;
-        border-radius: 4px 4px 0px 0px;
-        gap: 1px;
-        padding-top: 10px;
-        padding-bottom: 10px;
-        font-weight: 600;
-    }
-    .stTabs [aria-selected="true"] {
-        background-color: #E9ECEF;
-        border-bottom: 2px solid #2F3E46;
-    }
-    </style>
-""", unsafe_allow_html=True)
+    t = themes.get(theme_name, themes["Claro Industrial 🛠️"])
+    
+    st.markdown(f"""
+        <style>
+        .stApp {{
+            background-color: {t['bg']} !important;
+            color: {t['text']} !important;
+        }}
+        [data-testid="stSidebar"] {{
+            background-color: {t['sidebar_bg']} !important;
+        }}
+        .stMarkdown, h1, h2, h3, h4, h5, h6, label, p, span {{
+            color: {t['text']} !important;
+        }}
+        .main .block-container {{
+            padding-top: 2rem;
+        }}
+        .stTabs [data-baseweb="tab-list"] {{
+            gap: 24px;
+        }}
+        .stTabs [data-baseweb="tab"] {{
+            height: 50px;
+            white-space: pre-wrap;
+            background-color: {t['sidebar_bg']};
+            border-radius: 4px 4px 0px 0px;
+            gap: 1px;
+            padding-top: 10px;
+            padding-bottom: 10px;
+            font-weight: 600;
+            color: {t['text']};
+        }}
+        .stTabs [aria-selected="true"] {{
+            background-color: {t['bg']};
+            border-bottom: 2px solid {t['primary']};
+        }}
+        </style>
+    """, unsafe_allow_html=True)
+    return t
+
+# Selector de Temas en el Panel Lateral
+st.sidebar.header("🎨 Apariencia y Tema")
+theme_options = ["Claro Industrial 🛠️", "Modo Oscuro Cyberpunk 🌙", "Azul Noche Deep 🫐", "Naturaleza Menta 🌿"]
+selected_theme_name = st.sidebar.selectbox("Selecciona un tema visual", theme_options, key="active_theme_select")
+active_theme = apply_custom_theme(selected_theme_name)
 
 # --- Banner y Título de la aplicación ---
 import os
@@ -356,7 +423,7 @@ tab_calendar, tab_list, tab_stats, tab_grades = st.tabs([
 with tab_calendar:
     st.subheader("📅 Horario de la Semana")
     
-    def generate_html_schedule(classes_list):
+    def generate_html_schedule(classes_list, t):
         if not classes_list:
             return """
             <div style='text-align: center; padding: 40px; border: 2px dashed #ccc; border-radius: 8px; margin-top: 20px;'>
@@ -391,55 +458,55 @@ with tab_calendar:
                 if h_str in grid[c_day]:
                     grid[c_day][h_str].append(c)
         
-        # Estilos y encabezado
-        html = """
+        # Estilos y encabezado dinámicos según el tema activo
+        html = f"""
         <style>
-            .schedule-container {
+            .schedule-container {{
                 overflow-x: auto;
                 margin-top: 15px;
                 border-radius: 12px;
                 box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
-            }
-            .schedule-table {
+            }}
+            .schedule-table {{
                 width: 100%;
                 border-collapse: collapse;
                 font-family: 'Inter', -apple-system, sans-serif;
                 overflow: hidden;
-            }
-            .schedule-table th {
-                background-color: #1E293B;
-                color: #F8FAFC;
+            }}
+            .schedule-table th {{
+                background-color: {t['table_th_bg']};
+                color: {t['table_th_text']};
                 text-align: center;
                 padding: 16px;
                 font-size: 13px;
                 font-weight: 600;
                 letter-spacing: 0.5px;
                 text-transform: uppercase;
-                border-bottom: 3px solid #0F172A;
-            }
-            .schedule-table td {
-                border: 1px solid #E2E8F0;
+                border-bottom: 3px solid {t['primary']};
+            }}
+            .schedule-table td {{
+                border: 1px solid {t['table_td_border']};
                 padding: 6px;
                 text-align: center;
                 height: 80px;
                 vertical-align: middle;
                 font-size: 13px;
-                background-color: #FFFFFF;
-            }
-            .time-col {
-                background-color: #F1F5F9 !important;
+                background-color: {t['table_td_bg']};
+            }}
+            .time-col {{
+                background-color: {t['time_col_bg']} !important;
                 font-weight: 700;
                 width: 110px;
-                color: #475569;
+                color: {t['time_col_text']} !important;
                 font-size: 12px;
-                border-right: 2px solid #CBD5E1 !important;
-            }
-            .class-card {
+                border-right: 2px solid {t['table_td_border']} !important;
+            }}
+            .class-card {{
                 border-radius: 8px;
                 padding: 10px;
                 color: #FFFFFF;
                 font-weight: 500;
-                box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+                box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
                 display: flex;
                 flex-direction: column;
                 justify-content: center;
@@ -449,28 +516,29 @@ with tab_calendar:
                 min-height: 60px;
                 transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
                 border-left: 4px solid rgba(255, 255, 255, 0.4);
-            }
-            .class-card:hover {
+            }}
+            .class-card:hover {{
                 transform: translateY(-3px) scale(1.02);
-                box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
-                filter: brightness(1.05);
-            }
-            .class-name {
+                box-shadow: 0 8px 16px rgba(0, 0, 0, 0.25);
+                filter: brightness(1.08);
+            }}
+            .class-name {{
                 font-size: 13px;
                 font-weight: 700;
                 margin-bottom: 4px;
                 word-wrap: break-word;
                 letter-spacing: 0.3px;
                 line-height: 1.2;
-            }
-            .class-details {
+            }}
+            .class-details {{
                 font-size: 11px;
                 opacity: 0.9;
                 line-height: 1.3;
                 margin-top: 1px;
                 font-weight: 400;
-            }
+            }}
         </style>
+
         <div class="schedule-container">
             <table class="schedule-table">
                 <thead>
@@ -508,7 +576,7 @@ with tab_calendar:
         html += "</tbody></table></div>"
         return html
 
-    st.markdown(generate_html_schedule(classes), unsafe_allow_html=True)
+    st.markdown(generate_html_schedule(classes, active_theme), unsafe_allow_html=True)
 
 # pestaña 2: Lista Detallada
 with tab_list:
