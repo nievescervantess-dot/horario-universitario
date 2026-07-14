@@ -717,7 +717,29 @@ with tab_grades:
                     else:
                         st.error(f"Materia reprobada con {current_sum:.2f}. 💔")
                         
-            if st.button("🗑️ Limpiar todas las notas de esta materia", type="secondary"):
-                grades_data[selected_subject] = []
-                sm.save_grades(st.session_state.username, grades_data)
-                st.rerun()
+            # Sección para eliminar notas
+            st.markdown("---")
+            st.markdown("##### 🗑️ Gestionar Notas Registradas")
+            col_del1, col_del2 = st.columns(2)
+            
+            with col_del1:
+                # Armar opciones legibles para borrar notas individuales
+                eval_options = [f"{i}: {item['name']} (Nota: {item['grade']}, Peso: {item['weight']}%)" for i, item in enumerate(grades_data[selected_subject])]
+                selected_eval_to_delete = st.selectbox("Selecciona una nota para eliminar", eval_options, key="delete_eval_selectbox")
+                if st.button("🗑️ Eliminar Nota Seleccionada", type="secondary", key="delete_single_eval_btn", use_container_width=True):
+                    # Obtener el índice numérico
+                    idx = int(selected_eval_to_delete.split(":")[0])
+                    # Remover el elemento de la lista
+                    grades_data[selected_subject].pop(idx)
+                    sm.save_grades(st.session_state.username, grades_data)
+                    st.success("Nota eliminada correctamente.")
+                    st.rerun()
+                    
+            with col_del2:
+                # Espacio vacío para balancear el diseño y botón de limpiar todo
+                st.markdown("<div style='height: 28px;'></div>", unsafe_allow_html=True)
+                if st.button("🚨 Limpiar todas las notas", type="secondary", key="clear_all_grades_btn", use_container_width=True):
+                    grades_data[selected_subject] = []
+                    sm.save_grades(st.session_state.username, grades_data)
+                    st.success("Se eliminaron todas las notas de esta asignatura.")
+                    st.rerun()
